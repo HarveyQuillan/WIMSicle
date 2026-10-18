@@ -1,0 +1,22 @@
+Package: WIMSicle
+Title: Access Environment Agency Water Quality Data
+Version: 0.0.1
+Authors@R:
+    person(
+        "Harvey",
+        "Goodman",
+        email = "harvey.q.goodman@gmail.com",
+        role = c("aut", "cre")
+    )
+Description: Tools for downloading, exploring, and visualising
+    Environment Agency water quality data using the Water Quality API.
+License: Proprietary
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    dplyr,
+    ggplot2,
+    httr2,
+    purrr,
+    tibble
+Config/roxygen2/version: 8.1.1
