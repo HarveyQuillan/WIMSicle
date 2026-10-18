@@ -15,10 +15,21 @@ WIMSicle provides tools for downloading, exploring and visualising Environment A
 
 ## Installation
 
+### Locally
+
 ``` r
 devtools::install("path/to/WIMSicle")
 ```
 
+### From GitHub
+
+``` r
+options(download.file.method = "wininet")
+
+remotes::install_github(
+  "HarveyQuillan/WIMSicle"
+)
+```
 ## Load the package
 
 ``` r
