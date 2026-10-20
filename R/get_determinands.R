@@ -9,7 +9,13 @@
 #' dets <- get_determinands()
 #'
 #' @export
+.determinand_cache <- NULL
+
 get_determinands <- function() {
+
+  if (!is.null(.determinand_cache)) {
+    return(.determinand_cache)
+  }
 
   url <- paste0(
     .wims_base_url,
@@ -19,11 +25,20 @@ get_determinands <- function() {
   skip <- 0
   limit <- .wims_page_limit
 
+  page <- 1
+  max_pages <- .wims_max_pages
+
   results <- list()
 
   repeat {
 
-    resp <- httr2::request(url) |>
+    if (page > max_pages) {
+      stop(
+        "Maximum page limit exceeded."
+      )
+    }
+
+    req <- httr2::request(url) |>
       httr2::req_headers(
         Accept = "application/ld+json",
         `API-Version` = "1"
@@ -31,8 +46,9 @@ get_determinands <- function() {
       httr2::req_url_query(
         skip = skip,
         limit = limit
-      ) |>
-      httr2::req_perform()
+      )
+
+    resp <- perform_wims_request(req)
 
     json <- httr2::resp_body_json(resp)
 
@@ -54,6 +70,17 @@ get_determinands <- function() {
     }
 
     skip <- skip + limit
+    page <- page + 1
+  }
+
+  if (length(results) == 0) {
+
+    return(
+      tibble::tibble(
+        determinand_code = character(),
+        determinand = character()
+      )
+    )
 
   }
 
@@ -61,4 +88,7 @@ get_determinands <- function() {
     dplyr::distinct() |>
     dplyr::arrange(determinand)
 
+  .determinand_cache <<- out
+
+  out
 }

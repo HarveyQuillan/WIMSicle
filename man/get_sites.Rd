@@ -4,7 +4,13 @@
 \alias{get_sites}
 \title{Download observations for multiple sites}
 \usage{
-get_sites(sites, from = "2000-01-01", to = Sys.Date(), determinands = NULL)
+get_sites(
+  sites,
+  from = "2000-01-01",
+  to = Sys.Date(),
+  determinands = NULL,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{sites}{Character vector of sample point IDs.}

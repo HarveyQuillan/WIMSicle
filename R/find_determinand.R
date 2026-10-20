@@ -27,7 +27,8 @@ find_determinand <- function(
       grepl(
         search,
         determinand,
-        ignore.case = TRUE
+        ignore.case = TRUE,
+        fixed = TRUE
       )
     ) |>
     dplyr::arrange(determinand)

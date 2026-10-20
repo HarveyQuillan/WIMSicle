@@ -30,6 +30,7 @@ remotes::install_github(
   "HarveyQuillan/WIMSicle"
 )
 ```
+
 ## Load the package
 
 ``` r

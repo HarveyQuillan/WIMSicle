@@ -18,5 +18,9 @@ Imports:
     ggplot2,
     httr2,
     purrr,
+    furrr,
+    future,
+    memoise,
+    sf,
     tibble
 Config/roxygen2/version: 8.1.1

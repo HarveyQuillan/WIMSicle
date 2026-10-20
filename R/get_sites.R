@@ -25,7 +25,10 @@ get_sites <- function(
     sites,
     from = "2000-01-01",
     to = Sys.Date(),
-    determinands = NULL
+    determinands = NULL,
+    quiet = FALSE,
+    fail_fast = FALSE,
+    workers = NULL
 ) {
 
   from <- parse_wims_date(from)
@@ -39,18 +42,32 @@ get_sites <- function(
     stop("'sites' cannot be empty")
   }
 
-  if (!quiet) {
-    message("Downloading ", site)
+  sites <- unique(stats::na.omit(sites))
+
+  if (length(sites) == 0) {
+    stop("No valid sites supplied")
   }
 
-  purrr::map_dfr(
+  if (!is.null(workers)) {
+    future::plan(
+      future::multisession,
+      workers = workers
+    )
+
+    on.exit(
+      future::plan(future::sequential),
+      add = TRUE
+    )
+  }
+
+  results <- furrr::future_map(
     sites,
+
     function(site) {
 
-      message(
-        "Downloading ",
-        site
-      )
+      if (!quiet) {
+        message("Downloading ", site)
+      }
 
       tryCatch(
 
@@ -63,20 +80,54 @@ get_sites <- function(
 
         error = function(e) {
 
-          warning(
-            paste(
-              "Failed:",
-              site,
-              "-",
-              e$message
-            )
+          msg <- paste(
+            "Failed:",
+            site,
+            "-",
+            conditionMessage(e)
           )
 
-          tibble::tibble()
+          if (fail_fast) {
+            stop(msg)
+          }
 
+          warning(msg)
+
+          NULL
         }
       )
-    }
+    },
+
+    .options = furrr::furrr_options(
+      seed = TRUE
+    )
   )
 
+  results <- purrr::compact(results)
+
+  successful <- length(results)
+  attempted <- length(sites)
+
+  if (!quiet) {
+    message(
+      successful,
+      " of ",
+      attempted,
+      " sites downloaded successfully."
+    )
+  }
+
+  if (successful == 0) {
+
+    warning(
+      "No sites were successfully downloaded."
+    )
+
+    return(
+      empty_observations()
+    )
+  }
+
+  dplyr::bind_rows(results) |>
+    dplyr::arrange(sample_date)
 }

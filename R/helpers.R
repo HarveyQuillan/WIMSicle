@@ -25,7 +25,22 @@ parse_observation <- function(obs) {
       obs$observedProperty$prefLabel %||% NA_character_,
 
     result =
-      obs$hasResult$numericValue %||% NA_real_,
+      suppressWarnings(
+        as.numeric(
+          obs$hasResult$numericValue %||%
+            obs$hasResult$literalValue %||%
+            obs$hasResult$prefLabel %||%
+            NA_character_
+        )
+      ),
+
+    result_raw =
+      as.character(
+        obs$hasResult$numericValue %||%
+          obs$hasResult$literalValue %||%
+          obs$hasResult$prefLabel %||%
+          NA_character_
+      ),
 
     unit =
       obs$hasResult$hasUnit$altLabel %||% NA_character_,
@@ -55,11 +70,23 @@ parse_determinand <- function(x) {
 
 parse_wims_date <- function(x) {
 
-  if (missing(x) || is.null(x) || is.na(x) || x == "") {
+  if (missing(x) || is.null(x)) {
+    return(as.character(Sys.Date()))
+  }
+
+  if (length(x) == 0) {
+    return(as.character(Sys.Date()))
+  }
+
+  if (all(is.na(x))) {
     return(as.character(Sys.Date()))
   }
 
   x <- as.character(x)
+
+  if (identical(x, "")) {
+    return(as.character(Sys.Date()))
+  }
 
   if (grepl("^\\d{4}$", x)) {
     return(paste0(x, "-01-01"))
@@ -69,7 +96,16 @@ parse_wims_date <- function(x) {
     return(paste0(x, "-01"))
   }
 
-  as.character(as.Date(x))
+  date <- as.Date(x)
+
+  if (is.na(date)) {
+    stop(
+      "Invalid date: ",
+      x
+    )
+  }
+
+  as.character(date)
 
 }
 
@@ -262,3 +298,62 @@ parse_sampling_point <- function(x) {
 
 }
 
+# ------ API helpers ------
+
+perform_wims_request <- function(req) {
+
+  tryCatch(
+
+    req |>
+      httr2::req_retry(
+        max_tries = 5
+      ) |>
+      httr2::req_timeout(30) |>
+      httr2::req_perform(),
+
+    error = function(e) {
+
+      stop(
+        "WIMS API request failed: ",
+        conditionMessage(e),
+        call. = FALSE
+      )
+
+    }
+  )
+}
+
+
+empty_observations <- function() {
+
+  tibble::tibble(
+    sampling_point = character(),
+    site_name = character(),
+    sample_date = as.POSIXct(
+      character(),
+      tz = "UTC"
+    ),
+    determinand_code = character(),
+    determinand = character(),
+    result = numeric(),
+    result_raw = character(),
+    unit = character(),
+    sample_material = character(),
+    sampling_purpose = character()
+  )
+
+}
+
+empty_sampling_points <- function() {
+  tibble::tibble()
+}
+
+validate_date_range <- function(from, to) {
+
+  if (as.Date(from) > as.Date(to)) {
+    stop(
+      "'from' must be before 'to'"
+    )
+  }
+
+}

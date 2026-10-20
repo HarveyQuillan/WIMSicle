@@ -27,6 +27,26 @@ WIMSify <- function(
     determinand_map = NULL
 ) {
 
+  required <- c(
+    sample_date,
+    determinand,
+    result
+  )
+
+  missing <- setdiff(
+    required,
+    names(data)
+  )
+
+  if (length(missing) > 0) {
+
+    stop(
+      "Missing columns: ",
+      paste(missing, collapse = ", ")
+    )
+
+  }
+
   # Read csv if filepath supplied
   if (
     is.character(data) &&
@@ -71,6 +91,11 @@ WIMSify <- function(
 
     original_determinand =
       data[[determinand]],
+
+    result_raw =
+      as.character(
+        data[[result]]
+      ),
 
     result =
       suppressWarnings(

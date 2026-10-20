@@ -11,7 +11,10 @@ get_sampling_points(
   area_code = NULL,
   sub_area_code = NULL,
   status_code = NULL,
-  type_code = NULL
+  type_code = NULL,
+  easting = NULL,
+  northing = NULL,
+  radius = NULL
 )
 }
 \arguments{

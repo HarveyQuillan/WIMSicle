@@ -33,7 +33,10 @@ get_sampling_points <- function(
     area_code = NULL,
     sub_area_code = NULL,
     status_code = NULL,
-    type_code = NULL
+    type_code = NULL,
+    easting = NULL,
+    northing = NULL,
+    radius = NULL
 ) {
 
   url <- paste0(
@@ -121,8 +124,34 @@ get_sampling_points <- function(
 
     }
 
-    resp <- req |>
-      httr2::req_perform()
+    if (!is.null(easting)) {
+
+      req <- req |>
+        httr2::req_url_query(
+          easting = easting
+        )
+
+    }
+
+    if (!is.null(northing)) {
+
+      req <- req |>
+        httr2::req_url_query(
+          northing = northing
+        )
+
+    }
+
+    if (!is.null(radius)) {
+
+      req <- req |>
+        httr2::req_url_query(
+          radius = radius
+        )
+
+    }
+
+    resp <- perform_wims_request(req)
 
     json <- httr2::resp_body_json(resp)
 
@@ -163,7 +192,9 @@ get_sampling_points <- function(
       "No sampling points found matching supplied filters."
     )
 
-    return(tibble::tibble())
+    return(
+      empty_sampling_points()
+    )
 
   }
 

@@ -33,12 +33,12 @@ get_site <- function(
 
   if (!is.character(sample_point_id) ||
       length(sample_point_id) != 1) {
-    stop("'sample_point_id' must be a single character value")
+    stop(
+      "'sample_point_id' must be a single character value"
+    )
   }
 
-  if (as.Date(from) > as.Date(to)) {
-    stop("'from' must be before 'to'")
-  }
+  validate_date_range(from, to)
 
   base_url <- paste0(
     .wims_base_url,
@@ -47,12 +47,40 @@ get_site <- function(
     "/observation"
   )
 
+  if (!is.null(determinands)) {
+
+    site_dets <- get_site_determinands(
+      sample_point_id = sample_point_id,
+      from = from,
+      to = to
+    )
+
+    matched_dets <- resolve_determinands(
+      determinands,
+      site_dets
+    )
+
+    if (length(matched_dets) == 0) {
+      stop(
+        "No matching determinands found."
+      )
+    }
+  }
+
   skip <- 0
   limit <- .wims_page_limit
+  page <- 1
+  max_pages <- 1000
 
   results <- list()
 
   repeat {
+
+    if (page > max_pages) {
+      stop(
+        "Maximum page limit exceeded."
+      )
+    }
 
     req <- httr2::request(base_url) |>
       httr2::req_headers(
@@ -68,18 +96,6 @@ get_site <- function(
       )
 
     if (!is.null(determinands)) {
-
-      site_dets <- get_site_determinands(
-        sample_point_id = sample_point_id,
-        from = from,
-        to = to
-      )
-
-      matched_dets <- resolve_determinands(
-        determinands,
-        site_dets
-      )
-
       req <- req |>
         httr2::req_url_query(
           determinand = paste(
@@ -89,8 +105,7 @@ get_site <- function(
         )
     }
 
-    resp <- req |>
-      httr2::req_perform()
+    resp <- perform_wims_request(req)
 
     json <- httr2::resp_body_json(resp)
 
@@ -112,34 +127,11 @@ get_site <- function(
     }
 
     skip <- skip + limit
-
+    page <- page + 1
   }
 
   if (length(results) == 0) {
-
-    message(
-      "No data found for site '",
-      sample_point_id,
-      "' between ",
-      from,
-      " and ",
-      to
-    )
-
-    return(
-      tibble::tibble(
-        sampling_point = character(),
-        site_name = character(),
-        sample_date = as.POSIXct(character(), tz = "UTC"),
-        determinand_code = character(),
-        determinand = character(),
-        result = numeric(),
-        unit = character(),
-        sample_material = character(),
-        sampling_purpose = character()
-      )
-    )
-
+    return(empty_observations())
   }
 
   dplyr::bind_rows(results) |>
@@ -150,5 +142,4 @@ get_site <- function(
       )
     ) |>
     dplyr::arrange(sample_date)
-
 }
