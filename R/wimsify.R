@@ -152,7 +152,7 @@ WIMSify <- function(
     any(!is.na(out$determinand_code))
   ) {
 
-    det_lookup <- get_determinands()
+    det_lookup <- determinand_lookup
 
     out <- out |>
       dplyr::left_join(

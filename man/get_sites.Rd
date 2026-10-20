@@ -9,7 +9,9 @@ get_sites(
   from = "2000-01-01",
   to = Sys.Date(),
   determinands = NULL,
-  quiet = FALSE
+  quiet = FALSE,
+  fail_fast = FALSE,
+  workers = NULL
 )
 }
 \arguments{

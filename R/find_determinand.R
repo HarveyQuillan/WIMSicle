@@ -4,8 +4,6 @@
 #'
 #' @param search Character string to search for.
 #' @param determinand_df Optional determinand lookup table.
-#'   If NULL, all determinands will be downloaded using
-#'   `get_determinands()`.
 #'
 #' @return A tibble of matching determinands.
 #'
@@ -15,13 +13,8 @@
 #' @export
 find_determinand <- function(
     search,
-    determinand_df = NULL
+    determinand_df = determinand_lookup
 ) {
-
-  if (is.null(determinand_df)) {
-    determinand_df <- get_determinands()
-  }
-
   determinand_df |>
     dplyr::filter(
       grepl(
@@ -32,5 +25,4 @@ find_determinand <- function(
       )
     ) |>
     dplyr::arrange(determinand)
-
 }

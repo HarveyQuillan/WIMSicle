@@ -49,10 +49,9 @@ get_waterbody_sites <- function(
     ".geojson"
   )
 
-  waterbody <- sf::st_make_valid(
-    waterbody,
-    quiet = TRUE
-  )
+  waterbody <- sf::read_sf(waterbody_url, quiet = TRUE)
+
+  waterbody <- sf::st_make_valid(waterbody)
 
   if (nrow(waterbody) == 0) {
     stop(

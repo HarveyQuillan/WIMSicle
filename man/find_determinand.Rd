@@ -4,14 +4,12 @@
 \alias{find_determinand}
 \title{Find determinands by name}
 \usage{
-find_determinand(search, determinand_df = NULL)
+find_determinand(search, determinand_df = determinand_lookup)
 }
 \arguments{
 \item{search}{Character string to search for.}
 
-\item{determinand_df}{Optional determinand lookup table.
-If NULL, all determinands will be downloaded using
-\code{get_determinands()}.}
+\item{determinand_df}{Optional determinand lookup table.}
 }
 \value{
 A tibble of matching determinands.
