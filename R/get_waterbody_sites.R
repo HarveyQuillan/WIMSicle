@@ -1,24 +1,76 @@
 #' Get sampling points within a water body
 #'
-#' Downloads a water body polygon from the Environment Agency
-#' Catchment Planning API and returns all sampling points that
-#' fall within the water body.
+#' Downloads a water body boundary from the Environment Agency
+#' Catchment Planning API and returns sampling points that fall within
+#' the water body polygon.
 #'
-#' @param waterbody_id Water body identifier.
+#' The function automatically:
+#' \itemize{
+#'   \item downloads the water body geometry;
+#'   \item calculates a search area around the water body;
+#'   \item retrieves nearby sampling points from the Environment Agency
+#'         Water Quality API;
+#'   \item performs a spatial join to identify sampling points located
+#'         within the water body boundary.
+#' }
+#'
+#' Optional filters can be used to restrict results to specific
+#' sampling point statuses or sampling point types.
+#'
+#' @param waterbody_id Character. Environment Agency water body
+#'   identifier.
 #' @param status_code Optional sampling point status code.
 #' @param type_code Optional sampling point type code.
 #'
-#' @return A tibble of sampling points within the water body.
+#' @return
+#' A tibble containing sampling point metadata for all sampling points
+#' located within the specified water body.
+#'
+#' The returned data contains the same columns as
+#' `get_sampling_points()`:
+#' \describe{
+#'   \item{sampling_point}{Sampling point identifier.}
+#'   \item{site_name}{Sampling point name.}
+#'   \item{status}{Sampling point status description.}
+#'   \item{status_code}{Sampling point status code.}
+#'   \item{type}{Sampling point type description.}
+#'   \item{type_code}{Sampling point type code.}
+#'   \item{region}{Environment Agency region.}
+#'   \item{region_code}{Environment Agency region code.}
+#'   \item{area}{Environment Agency area.}
+#'   \item{area_code}{Environment Agency area code.}
+#'   \item{sub_area}{Environment Agency sub-area.}
+#'   \item{sub_area_code}{Environment Agency sub-area code.}
+#'   \item{easting}{British National Grid easting.}
+#'   \item{northing}{British National Grid northing.}
+#' }
+#'
+#' If no matching sampling points are found, an empty tibble is
+#' returned.
 #'
 #' @examples
-#' sites <- get_waterbody_sites(
-#'   "GB106039023232"
+#' # All sampling points within a water body
+#' get_waterbody_sites(
+#'   waterbody_id = "GB106039023232"
 #' )
 #'
-#' sites <- get_waterbody_sites(
-#'   "GB106039023232",
+#' # Open sampling points only
+#' get_waterbody_sites(
+#'   waterbody_id = "GB106039023232",
 #'   status_code = "O"
 #' )
+#'
+#' # Open river monitoring sites only
+#' get_waterbody_sites(
+#'   waterbody_id = "GB106039023232",
+#'   status_code = "O",
+#'   type_code = "F6"
+#' )
+#'
+#' @seealso
+#' \code{\link{get_sampling_points}},
+#' \code{\link{get_site}},
+#' \code{\link{get_sites}}
 #'
 #' @export
 get_waterbody_sites <- function(

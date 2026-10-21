@@ -1,10 +1,44 @@
-#' Get determinands available at a site
+#' Get determinands available at a sampling point
 #'
-#' @param sample_point_id Character. Sampling point ID.
-#' @param from Character or Date. Start date.
-#' @param to Character or Date. End date.
+#' Retrieves all water quality observations for a sampling point within
+#' the specified date range and returns the unique determinands present
+#' in the dataset.
 #'
-#' @return A tibble containing determinand codes and names.
+#' This function is useful for discovering which determinands are
+#' available before downloading observations with `get_site()` or
+#' `get_sites()`.
+#'
+#' @param sample_point_id Character. Environment Agency sampling point
+#'   identifier.
+#' @param from Character or Date. Start date for the search period.
+#'   Partial dates such as `"2020"` or `"2020-01"` are accepted.
+#' @param to Character or Date. End date for the search period.
+#'   Partial dates such as `"2020"` or `"2020-12"` are accepted.
+#'
+#' @return
+#' A tibble containing one row per determinand with the following
+#' columns:
+#' \describe{
+#'   \item{determinand_code}{Environment Agency determinand code.}
+#'   \item{determinand}{Environment Agency determinand name.}
+#' }
+#'
+#' Determinands are returned in alphabetical order.
+#'
+#' @examples
+#' get_site_determinands(
+#'   sample_point_id = "TH-PCNR0051"
+#' )
+#'
+#' get_site_determinands(
+#'   sample_point_id = "TH-PCNR0051",
+#'   from = "2020-01-01",
+#'   to = "2020-12-31"
+#' )
+#'
+#' @seealso
+#' \code{\link{get_site}},
+#' \code{\link{find_determinand}}
 #'
 #' @export
 get_site_determinands <- function(

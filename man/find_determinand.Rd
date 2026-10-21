@@ -7,17 +7,28 @@
 find_determinand(search, determinand_df = determinand_lookup)
 }
 \arguments{
-\item{search}{Character string to search for.}
+\item{search}{Character string used to search determinand names.}
 
-\item{determinand_df}{Optional determinand lookup table.}
+\item{determinand_df}{A determinand lookup table containing at least
+a \code{determinand} column. Defaults to \code{determinand_lookup}.}
 }
 \value{
-A tibble of matching determinands.
+A tibble containing matching determinands, ordered alphabetically by
+determinand name.
 }
 \description{
-Searches a determinand lookup table for matching determinand names.
+Searches a determinand lookup table and returns determinands whose
+names contain the supplied search text. Matching is case-insensitive
+and uses fixed string matching rather than regular expressions.
+}
+\details{
+This function is useful for discovering Environment Agency WIMS
+determinand names and codes before using functions such as
+\code{get_site()} or \code{get_sites()}.
 }
 \examples{
 find_determinand("nitrate")
+
+find_determinand("phosph")
 
 }

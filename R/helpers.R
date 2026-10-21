@@ -1,84 +1,19 @@
-# ------ Internal helper functions ------
+# ------ General utilities ------
 
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
 }
 
-# ------ Parsing helpers ------
-
-parse_observation <- function(obs) {
-
-  tibble::tibble(
-    sampling_point =
-      obs$hasSamplingPoint$notation %||% NA_character_,
-
-    site_name =
-      obs$hasSamplingPoint$prefLabel %||% NA_character_,
-
-    sample_date =
-      obs$phenomenonTime %||% NA_character_,
-
-    determinand_code =
-      obs$observedProperty$notation %||% NA_character_,
-
-    determinand =
-      obs$observedProperty$prefLabel %||% NA_character_,
-
-    result =
-      suppressWarnings(
-        as.numeric(
-          obs$hasResult$numericValue %||%
-            obs$hasResult$literalValue %||%
-            obs$hasResult$prefLabel %||%
-            NA_character_
-        )
-      ),
-
-    result_raw =
-      as.character(
-        obs$hasResult$numericValue %||%
-          obs$hasResult$literalValue %||%
-          obs$hasResult$prefLabel %||%
-          NA_character_
-      ),
-
-    unit =
-      obs$hasResult$hasUnit$altLabel %||% NA_character_,
-
-    sample_material =
-      obs$hasSample$sampleMaterialType$prefLabel %||%
-      NA_character_,
-
-    sampling_purpose =
-      obs$hasSample$isResultOf$samplingPurpose$prefLabel %||%
-      NA_character_
-  )
-
-}
-
-parse_determinand <- function(x) {
-
-  tibble::tibble(
-    determinand_code =
-      x$notation %||% NA_character_,
-
-    determinand =
-      x$prefLabel %||% NA_character_
-  )
-
-}
+# ------ Validation helpers ------
 
 parse_wims_date <- function(x) {
 
-  if (missing(x) || is.null(x)) {
-    return(as.character(Sys.Date()))
-  }
-
-  if (length(x) == 0) {
-    return(as.character(Sys.Date()))
-  }
-
-  if (all(is.na(x))) {
+  if (
+    missing(x) ||
+    is.null(x) ||
+    length(x) == 0 ||
+    all(is.na(x))
+  ) {
     return(as.character(Sys.Date()))
   }
 
@@ -106,119 +41,88 @@ parse_wims_date <- function(x) {
   }
 
   as.character(date)
-
 }
 
-# ------ Determinand helpers ------
+validate_date_range <- function(from, to) {
 
-extract_determinands <- function(data) {
-
-  data |>
-    dplyr::distinct(
-      determinand_code,
-      determinand
-    ) |>
-    dplyr::arrange(determinand)
-
-}
-
-find_best_determinand <- function(
-    search,
-    determinand_df
-) {
-
-  search <- tolower(search)
-
-  determinand_df |>
-    dplyr::mutate(
-      det_lower = tolower(determinand),
-
-      score = dplyr::case_when(
-        det_lower == search ~ 1,
-        startsWith(det_lower, search) ~ 2,
-        grepl(
-          paste0("\\b", search, "\\b"),
-          det_lower
-        ) ~ 3,
-        grepl(
-          search,
-          det_lower
-        ) ~ 4,
-        TRUE ~ 999
-      )
-    ) |>
-    dplyr::filter(
-      score < 999
-    ) |>
-    dplyr::arrange(score)
-
-}
-
-resolve_determinands <- function(
-    determinands,
-    site_dets
-) {
-
-  resolved <- character()
-
-  for (det in determinands) {
-
-    if (grepl(
-      "^[0-9]+$",
-      det
-    )) {
-
-      resolved <- c(
-        resolved,
-        det
-      )
-
-      next
-
-    }
-
-    matches <- find_best_determinand(
-      det,
-      site_dets
+  if (as.Date(from) > as.Date(to)) {
+    stop(
+      "'from' must be before 'to'"
     )
-
-    if (nrow(matches) == 0) {
-
-      warning(
-        paste(
-          "No determinand match found for",
-          det
-        )
-      )
-
-      next
-
-    }
-
-    best_match <- matches[1, ]
-
-    message(
-      "Matched '",
-      det,
-      "' -> '",
-      best_match$determinand,
-      "' (",
-      best_match$determinand_code,
-      ")"
-    )
-
-    resolved <- c(
-      resolved,
-      best_match$determinand_code
-    )
-
   }
-
-  unique(resolved)
-
 }
 
-# ------ Sampling point helpers ------
+# ------ Observation parsers ------
+
+parse_observation <- function(obs) {
+
+  tibble::tibble(
+    sampling_point =
+      obs$hasSamplingPoint$notation %||%
+      NA_character_,
+
+    site_name =
+      obs$hasSamplingPoint$prefLabel %||%
+      NA_character_,
+
+    sample_date =
+      obs$phenomenonTime %||%
+      NA_character_,
+
+    determinand_code =
+      obs$observedProperty$notation %||%
+      NA_character_,
+
+    determinand =
+      obs$observedProperty$prefLabel %||%
+      NA_character_,
+
+    result =
+      suppressWarnings(
+        as.numeric(
+          obs$hasResult$numericValue %||%
+            obs$hasResult$literalValue %||%
+            obs$hasResult$prefLabel %||%
+            NA_character_
+        )
+      ),
+
+    result_raw =
+      as.character(
+        obs$hasResult$numericValue %||%
+          obs$hasResult$literalValue %||%
+          obs$hasResult$prefLabel %||%
+          NA_character_
+      ),
+
+    unit =
+      obs$hasResult$hasUnit$altLabel %||%
+      NA_character_,
+
+    sample_material =
+      obs$hasSample$sampleMaterialType$prefLabel %||%
+      NA_character_,
+
+    sampling_purpose =
+      obs$hasSample$isResultOf$samplingPurpose$prefLabel %||%
+      NA_character_
+  )
+}
+
+parse_determinand <- function(x) {
+
+  tibble::tibble(
+    determinand_code =
+      x$notation %||%
+      NA_character_,
+
+    determinand =
+      x$prefLabel %||%
+      NA_character_
+  )
+}
+
+# ------ Sampling point parsers ------
 
 parse_sampling_point <- function(x) {
 
@@ -246,10 +150,12 @@ parse_sampling_point <- function(x) {
 
   tibble::tibble(
     sampling_point =
-      x$notation %||% NA_character_,
+      x$notation %||%
+      NA_character_,
 
     site_name =
-      x$prefLabel %||% NA_character_,
+      x$prefLabel %||%
+      NA_character_,
 
     status =
       x$samplingPointStatus$prefLabel %||%
@@ -292,10 +198,97 @@ parse_sampling_point <- function(x) {
       NA_character_,
 
     easting = easting,
-
     northing = northing
   )
+}
 
+# ------ Determinand helpers ------
+
+extract_determinands <- function(data) {
+
+  data |>
+    dplyr::distinct(
+      determinand_code,
+      determinand
+    ) |>
+    dplyr::arrange(determinand)
+}
+
+find_best_determinand <- function(
+    search,
+    determinand_df
+) {
+
+  search <- tolower(search)
+
+  determinand_df |>
+    dplyr::mutate(
+      det_lower = tolower(determinand),
+      score = dplyr::case_when(
+        det_lower == search ~ 1,
+        startsWith(det_lower, search) ~ 2,
+        grepl(
+          paste0("\\b", search, "\\b"),
+          det_lower
+        ) ~ 3,
+        grepl(search, det_lower) ~ 4,
+        TRUE ~ 999
+      )
+    ) |>
+    dplyr::filter(score < 999) |>
+    dplyr::arrange(score)
+}
+
+resolve_determinands <- function(
+    determinands,
+    site_dets
+) {
+
+  resolved <- character()
+
+  for (det in determinands) {
+
+    if (grepl("^\\[?[0-9]+\\]?$", det)) {
+      resolved <- c(resolved, det)
+      next
+    }
+
+    matches <- find_best_determinand(
+      det,
+      site_dets
+    )
+
+    if (nrow(matches) == 0) {
+
+      warning(
+        paste(
+          "No determinand match found for",
+          det
+        )
+      )
+
+      next
+    }
+
+    best_match <- matches[1, ]
+
+    message(
+      "Matched '",
+      det,
+      "' -> '",
+      best_match$determinand,
+      "' (",
+      best_match$determinand_code,
+      ")"
+    )
+
+    resolved <- c(
+      resolved,
+      best_match$determinand_code
+    )
+  }
+
+  unique(resolved)
 }
 
 # ------ API helpers ------
@@ -303,7 +296,6 @@ parse_sampling_point <- function(x) {
 perform_wims_request <- function(req) {
 
   tryCatch(
-
     req |>
       httr2::req_retry(
         max_tries = 5
@@ -318,11 +310,11 @@ perform_wims_request <- function(req) {
         conditionMessage(e),
         call. = FALSE
       )
-
     }
   )
 }
 
+# ------ Empty object constructors ------
 
 empty_observations <- function() {
 
@@ -341,19 +333,8 @@ empty_observations <- function() {
     sample_material = character(),
     sampling_purpose = character()
   )
-
 }
 
 empty_sampling_points <- function() {
   tibble::tibble()
-}
-
-validate_date_range <- function(from, to) {
-
-  if (as.Date(from) > as.Date(to)) {
-    stop(
-      "'from' must be before 'to'"
-    )
-  }
-
 }

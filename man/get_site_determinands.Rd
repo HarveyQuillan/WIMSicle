@@ -2,20 +2,53 @@
 % Please edit documentation in R/get_site_determinands.R
 \name{get_site_determinands}
 \alias{get_site_determinands}
-\title{Get determinands available at a site}
+\title{Get determinands available at a sampling point}
 \usage{
 get_site_determinands(sample_point_id, from = "2000-01-01", to = Sys.Date())
 }
 \arguments{
-\item{sample_point_id}{Character. Sampling point ID.}
+\item{sample_point_id}{Character. Environment Agency sampling point
+identifier.}
 
-\item{from}{Character or Date. Start date.}
+\item{from}{Character or Date. Start date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-01"} are accepted.}
 
-\item{to}{Character or Date. End date.}
+\item{to}{Character or Date. End date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-12"} are accepted.}
 }
 \value{
-A tibble containing determinand codes and names.
+A tibble containing one row per determinand with the following
+columns:
+\describe{
+\item{determinand_code}{Environment Agency determinand code.}
+\item{determinand}{Environment Agency determinand name.}
+}
+
+Determinands are returned in alphabetical order.
 }
 \description{
-Get determinands available at a site
+Retrieves all water quality observations for a sampling point within
+the specified date range and returns the unique determinands present
+in the dataset.
+}
+\details{
+This function is useful for discovering which determinands are
+available before downloading observations with \code{get_site()} or
+\code{get_sites()}.
+}
+\examples{
+get_site_determinands(
+  sample_point_id = "TH-PCNR0051"
+)
+
+get_site_determinands(
+  sample_point_id = "TH-PCNR0051",
+  from = "2020-01-01",
+  to = "2020-12-31"
+)
+
+}
+\seealso{
+\code{\link{get_site}},
+\code{\link{find_determinand}}
 }

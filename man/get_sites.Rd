@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_sites.R
 \name{get_sites}
 \alias{get_sites}
-\title{Download observations for multiple sites}
+\title{Download water quality observations for multiple sampling points}
 \usage{
 get_sites(
   sites,
@@ -15,29 +15,98 @@ get_sites(
 )
 }
 \arguments{
-\item{sites}{Character vector of sample point IDs.}
+\item{sites}{Character vector of Environment Agency sampling point
+identifiers.}
 
-\item{from}{Start date.}
+\item{from}{Character or Date. Start date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-01"} are accepted.}
 
-\item{to}{End date.}
+\item{to}{Character or Date. End date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-12"} are accepted.}
 
-\item{determinands}{Optional vector of determinands.}
+\item{determinands}{Optional character vector of determinand names
+and/or determinand codes.}
+
+\item{quiet}{Logical. If \code{TRUE}, suppresses progress messages.}
+
+\item{fail_fast}{Logical. If \code{TRUE}, stop immediately when a site
+download fails. If \code{FALSE}, failed sites generate warnings and
+processing continues.}
+
+\item{workers}{Optional integer specifying the number of parallel
+workers to use. If \code{NULL}, processing occurs sequentially.}
 }
 \value{
-Tibble of observations from all sites.
+A tibble containing observations from all successfully downloaded
+sites.
+
+The returned data contains the same columns as \code{get_site()}:
+\describe{
+\item{sampling_point}{Sampling point identifier.}
+\item{site_name}{Sampling point name.}
+\item{sample_date}{Sample date and time (UTC).}
+\item{determinand_code}{Environment Agency determinand code.}
+\item{determinand}{Environment Agency determinand name.}
+\item{result}{Numeric result value where available.}
+\item{result_raw}{Original result value as returned by the API.}
+\item{unit}{Measurement unit.}
+\item{sample_material}{Sample material type.}
+\item{sampling_purpose}{Sampling purpose description.}
+}
+
+Results are returned in chronological order. If no sites are
+successfully downloaded, an empty observations tibble is returned.
 }
 \description{
-Downloads water quality observations for multiple sampling points
-and combines the results into a single tibble.
+Retrieves water quality observations for multiple sampling points and
+combines the results into a single tibble.
+}
+\details{
+The function calls \code{get_site()} for each supplied sampling point and
+can optionally download sites in parallel using multiple workers.
+Failed site downloads can either generate warnings and continue, or
+stop execution immediately.
 }
 \examples{
+# Download observations from multiple sites
+get_sites(
+  sites = c(
+    "TH-PCNR0051",
+    "TH-PNAR0250"
+  )
+)
+
+# Restrict by date range
 get_sites(
   sites = c(
     "TH-PCNR0051",
     "TH-PNAR0250"
   ),
   from = "2020-01-01",
-  to = "2021-01-01"
+  to = "2020-12-31"
 )
 
+# Filter by determinand
+get_sites(
+  sites = c(
+    "TH-PCNR0051",
+    "TH-PNAR0250"
+  ),
+  determinands = "Nitrate"
+)
+
+# Download using parallel workers
+get_sites(
+  sites = c(
+    "TH-PCNR0051",
+    "TH-PNAR0250"
+  ),
+  workers = 4
+)
+
+}
+\seealso{
+\code{\link{get_site}},
+\code{\link{get_site_determinands}},
+\code{\link{get_sampling_points}}
 }

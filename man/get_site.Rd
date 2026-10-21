@@ -12,27 +12,82 @@ get_site(
 )
 }
 \arguments{
-\item{sample_point_id}{Character. Sampling point ID.}
+\item{sample_point_id}{Character. Environment Agency sampling point
+identifier.}
 
-\item{from}{Character or Date. Start date.}
+\item{from}{Character or Date. Start date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-01"} are accepted.}
 
-\item{to}{Character or Date. End date.}
+\item{to}{Character or Date. End date for the search period.
+Partial dates such as \code{"2020"} or \code{"2020-12"} are accepted.}
 
 \item{determinands}{Optional character vector of determinand names
-or codes.}
+and/or determinand codes. Partial determinand names are supported
+and will be matched against determinands available at the site.}
 }
 \value{
-A tibble of water quality observations.
+A tibble containing water quality observations with the following
+columns:
+\describe{
+\item{sampling_point}{Sampling point identifier.}
+\item{site_name}{Sampling point name.}
+\item{sample_date}{Sample date and time (UTC).}
+\item{determinand_code}{Environment Agency determinand code.}
+\item{determinand}{Environment Agency determinand name.}
+\item{result}{Numeric result value where available.}
+\item{result_raw}{Original result value as returned by the API.}
+\item{unit}{Measurement unit.}
+\item{sample_material}{Sample material type.}
+\item{sampling_purpose}{Sampling purpose description.}
+}
+
+Results are returned in chronological order. If no observations are
+found, an empty observations tibble is returned.
 }
 \description{
-Downloads water quality observations from the Environment Agency
+Retrieves water quality observations from the Environment Agency
 Water Quality API for a single sampling point.
 }
+\details{
+Observations can be filtered by date range and, optionally,
+by determinand name or determinand code. When determinand names are
+supplied, the function automatically matches them to available
+determinands at the sampling point before downloading results.
+
+All available pages of results are retrieved automatically and
+combined into a single tibble.
+}
 \examples{
+# Download all observations
+get_site(
+  sample_point_id = "TH-PCNR0051"
+)
+
+# Restrict by date range
 get_site(
   sample_point_id = "TH-PCNR0051",
   from = "2020-01-01",
   to = "2020-12-31"
 )
 
+# Filter by determinand name
+get_site(
+  sample_point_id = "TH-PCNR0051",
+  determinands = "Nitrate"
+)
+
+# Filter by multiple determinands
+get_site(
+  sample_point_id = "TH-PCNR0051",
+  determinands = c(
+    "Nitrate",
+    "Phosphate"
+  )
+)
+
+}
+\seealso{
+\code{\link{get_site_determinands}},
+\code{\link{get_sites}},
+\code{\link{find_determinand}}
 }

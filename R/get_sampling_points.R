@@ -1,28 +1,72 @@
 #' Download sampling point metadata
 #'
-#' Downloads sampling point information from the
-#' Environment Agency Water Quality API.
+#' Retrieves sampling point metadata from the Environment Agency Water
+#' Quality API.
 #'
-#' @param point_notation Optional sampling point ID(s).
-#' @param site_name Optional partial site name search.
-#' @param region_code Optional region code.
-#' @param area_code Optional area code.
-#' @param sub_area_code Optional sub-area code.
-#' @param status_code Optional status code.
+#' Results can be filtered using sampling point identifiers, site names,
+#' organisational geography (region, area and sub-area), sampling point
+#' status, sampling point type, or by proximity to a National Grid
+#' location.
+#'
+#' The function automatically retrieves all available pages of results
+#' and returns them as a single tibble.
+#'
+#' @param point_notation Optional character vector of sampling point
+#'   identifiers.
+#' @param site_name Optional partial site name search string.
+#' @param region_code Optional Environment Agency region code.
+#' @param area_code Optional Environment Agency area code.
+#' @param sub_area_code Optional Environment Agency sub-area code.
+#' @param status_code Optional sampling point status code.
 #' @param type_code Optional sampling point type code.
+#' @param easting Optional British National Grid easting.
+#' @param northing Optional British National Grid northing.
+#' @param radius Optional search radius in kilometres. Must be supplied
+#'   with both `easting` and `northing`.
 #'
-#' @return A tibble containing sampling point metadata.
+#' @return
+#' A tibble containing sampling point metadata, including:
+#' \describe{
+#'   \item{sampling_point}{Sampling point identifier.}
+#'   \item{site_name}{Sampling point name.}
+#'   \item{status}{Sampling point status description.}
+#'   \item{status_code}{Sampling point status code.}
+#'   \item{type}{Sampling point type description.}
+#'   \item{type_code}{Sampling point type code.}
+#'   \item{region}{Environment Agency region.}
+#'   \item{region_code}{Environment Agency region code.}
+#'   \item{area}{Environment Agency area.}
+#'   \item{area_code}{Environment Agency area code.}
+#'   \item{sub_area}{Environment Agency sub-area.}
+#'   \item{sub_area_code}{Environment Agency sub-area code.}
+#'   \item{easting}{British National Grid easting.}
+#'   \item{northing}{British National Grid northing.}
+#' }
+#'
+#' If no matching sampling points are found, an empty tibble is returned.
 #'
 #' @examples
-#' get_sampling_points()
+#' # Find a specific sampling point
+#' get_sampling_points(
+#'   point_notation = "TH-PCNR0051"
+#' )
 #'
+#' # Search by region
 #' get_sampling_points(
 #'   region_code = "TH"
 #' )
 #'
-#' open_river_sites <- get_sampling_points(
+#' # Open river monitoring sites
+#' get_sampling_points(
 #'   status_code = "O",
 #'   type_code = "F6"
+#' )
+#'
+#' # Sites within 10 km of a grid reference
+#' get_sampling_points(
+#'   easting = 530000,
+#'   northing = 180000,
+#'   radius = 10
 #' )
 #'
 #' @export

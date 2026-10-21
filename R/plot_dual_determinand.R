@@ -3,26 +3,65 @@
 #' Creates a dual-axis time series plot for two determinands contained
 #' within a WIMS dataset.
 #'
+#' The function automatically calculates a scaling factor using a
+#' specified quantile of each determinand's distribution, allowing two
+#' determinands with different units or magnitudes to be displayed on
+#' the same chart with independent y-axes.
+#'
 #' @param data Data frame returned by `get_site()` or `get_sites()`.
 #' @param determinand_1 Name of the first determinand.
 #' @param determinand_2 Name of the second determinand.
-#' @param colour_1 Colour for first determinand.
-#' @param colour_2 Colour for second determinand.
-#' @param scale_quantile Quantile used to align the two axes.
-#' @param y1_label Optional primary y-axis label.
-#' @param y2_label Optional secondary y-axis label.
-#' @param date_breaks Date break interval passed to
-#'   `ggplot2::scale_x_datetime()`.
-#' @param plot_theme ggplot theme object.
+#' @param colour_1 Colour used for the first determinand.
+#' @param colour_2 Colour used for the second determinand.
+#' @param scale_quantile Numeric value between 0 and 1 used to calculate
+#'   the scaling factor between the two axes. Defaults to `0.95`.
+#' @param y1_label Optional label for the primary y-axis. If `NULL`,
+#'   a label is generated automatically from the determinand name and
+#'   unit.
+#' @param y2_label Optional label for the secondary y-axis. If `NULL`,
+#'   a label is generated automatically from the determinand name and
+#'   unit.
+#' @param date_breaks Character string passed to
+#'   `ggplot2::scale_x_datetime()` controlling x-axis date breaks.
+#' @param plot_theme A ggplot theme object. Defaults to
+#'   `ggplot2::theme_bw()`.
 #'
-#' @return A ggplot object.
+#' @return
+#' A `ggplot2` object showing both determinands through time using
+#' separate y-axes.
+#'
+#' The plot:
+#' \itemize{
+#'   \item displays observations as points;
+#'   \item uses a primary axis for the first determinand;
+#'   \item uses a secondary axis for the second determinand;
+#'   \item automatically derives axis labels from available units when
+#'         not supplied.
+#' }
+#'
+#' @details
+#' The scaling factor is calculated from the selected quantile of each
+#' determinand's distribution:
+#'
+#' \deqn{
+#' scale\ factor = q_1 / q_2
+#' }
+#'
+#' where \eqn{q_1} and \eqn{q_2} are the chosen quantiles of the first
+#' and second determinands respectively.
+#'
+#' Using a quantile rather than the maximum value helps reduce the
+#' influence of extreme outliers.
 #'
 #' @examples
 #' data <- get_site(
 #'   sample_point_id = "TH-PCNR0051",
 #'   from = "2010-01-01",
 #'   to = "2015-01-01",
-#'   determinands = c("Nitrate", "Chlorophyll")
+#'   determinands = c(
+#'     "Nitrate",
+#'     "Chlorophyll"
+#'   )
 #' )
 #'
 #' plot_dual_determinand(
@@ -30,6 +69,19 @@
 #'   determinand_1 = "Nitrate",
 #'   determinand_2 = "Chlorophyll"
 #' )
+#'
+#' plot_dual_determinand(
+#'   data,
+#'   determinand_1 = "Nitrate",
+#'   determinand_2 = "Chlorophyll",
+#'   colour_1 = "blue",
+#'   colour_2 = "darkgreen",
+#'   scale_quantile = 0.9
+#' )
+#'
+#' @seealso
+#' \code{\link{get_site}},
+#' \code{\link{get_sites}}
 #'
 #' @export
 plot_dual_determinand <- function(

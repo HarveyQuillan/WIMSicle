@@ -14,13 +14,13 @@ License: Proprietary
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
+    jsonlite,
     dplyr,
     ggplot2,
     httr2,
     purrr,
     furrr,
     future,
-    memoise,
     sf,
     tibble
 Config/roxygen2/version: 8.1.1

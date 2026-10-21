@@ -1,22 +1,90 @@
 #' Convert data to WIMSicle format
 #'
-#' Converts a data frame or CSV file into the standard
-#' WIMSicle observation format.
+#' Converts a data frame or CSV file into the standard WIMSicle
+#' observation format.
 #'
-#' @param data Data frame or CSV filepath.
-#' @param sampling_point Column containing sampling point IDs.
+#' The function standardises column names, converts dates and results
+#' into WIMS-compatible fields, and optionally maps source determinand
+#' names to Environment Agency determinand codes.
+#'
+#' When determinand codes are available, official Environment Agency
+#' determinand names are automatically applied using the package
+#' determinand lookup table.
+#'
+#' @param data A data frame containing water quality observations, or a
+#'   character string containing the path to a CSV file.
+#' @param sampling_point Optional column containing sampling point
+#'   identifiers.
 #' @param sample_date Column containing sample dates.
 #' @param determinand Column containing determinand names.
 #' @param result Column containing result values.
 #' @param site_name Optional column containing site names.
-#' @param unit Optional column containing units.
-#' @param determinand_map Optional lookup table with columns:
-#'   source_name and determinand_code.
+#' @param unit Optional column containing measurement units.
+#' @param determinand_map Optional lookup table containing:
+#'   \describe{
+#'     \item{source_name}{Original determinand name.}
+#'     \item{determinand_code}{Environment Agency determinand code.}
+#'   }
 #'
-#' @return A tibble in WIMSicle format.
+#' @return
+#' A tibble in WIMSicle observation format containing:
+#' \describe{
+#'   \item{sampling_point}{Sampling point identifier.}
+#'   \item{site_name}{Sampling point name.}
+#'   \item{sample_date}{Sample date and time (UTC).}
+#'   \item{determinand_code}{Environment Agency determinand code.}
+#'   \item{determinand}{Standardised determinand name.}
+#'   \item{original_determinand}{Original source determinand name.}
+#'   \item{result_raw}{Original result value.}
+#'   \item{result}{Numeric result value where possible.}
+#'   \item{unit}{Measurement unit.}
+#'   \item{sample_material}{Sample material type.}
+#'   \item{sampling_purpose}{Sampling purpose description.}
+#' }
+#'
+#' @details
+#' Result values are converted to numeric where possible. Common
+#' qualifier symbols such as `<` and `>` are removed before numeric
+#' conversion.
+#'
+#' Missing optional fields are populated with `NA`.
+#'
+#' If a determinand mapping table is supplied, determinand codes are
+#' joined into the output and official Environment Agency determinand
+#' names are automatically applied where available.
+#'
+#' @examples
+#' # Convert a data frame
+#' wimsify(
+#'   data = my_data,
+#'   sampling_point = "site_id",
+#'   sample_date = "sample_date",
+#'   determinand = "parameter",
+#'   result = "value"
+#' )
+#'
+#' # Convert a CSV file
+#' wimsify(
+#'   data = "results.csv",
+#'   sample_date = "Date",
+#'   determinand = "Parameter",
+#'   result = "Result"
+#' )
+#'
+#' # Apply determinand mapping
+#' wimsify(
+#'   data = my_data,
+#'   sample_date = "sample_date",
+#'   determinand = "parameter",
+#'   result = "value",
+#'   determinand_map = my_mapping
+#' )
+#'
+#' @seealso
+#' \code{\link{find_determinand}}
 #'
 #' @export
-WIMSify <- function(
+wimsify <- function(
     data,
     sampling_point = NULL,
     sample_date,

@@ -1,0 +1,14 @@
+utils::globalVariables(
+  c(
+    "determinand",
+    "determinand_code",
+    "determinand_code.x",
+    "determinand_code.y",
+    "determinand_lookup",
+    "determinand_wims",
+    "result",
+    "sample_date",
+    "score",
+    "unit"
+  )
+)
