@@ -1,6 +1,6 @@
 # WIMSicle
 
-(https://github.com/HarveyQuillan/WIMSicle/actions/workflows/R-CMD-check.yaml/badge.svg)
+[![](https://github.com/HarveyQuillan/WIMSicle/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/HarveyQuillan/WIMSicle/actions)
 
 WIMSicle provides tools for downloading, exploring and visualising Environment Agency water quality data using the Water Quality API.
 
