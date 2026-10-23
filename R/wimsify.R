@@ -27,34 +27,16 @@
 #'   }
 #'
 #' @return
-#' A tibble in WIMSicle observation format containing:
-#' \describe{
-#'   \item{sampling_point}{Sampling point identifier.}
-#'   \item{site_name}{Sampling point name.}
-#'   \item{sample_date}{Sample date and time (UTC).}
-#'   \item{determinand_code}{Environment Agency determinand code.}
-#'   \item{determinand}{Standardised determinand name.}
-#'   \item{original_determinand}{Original source determinand name.}
-#'   \item{result_raw}{Original result value.}
-#'   \item{result}{Numeric result value where possible.}
-#'   \item{unit}{Measurement unit.}
-#'   \item{sample_material}{Sample material type.}
-#'   \item{sampling_purpose}{Sampling purpose description.}
-#' }
-#'
-#' @details
-#' Result values are converted to numeric where possible. Common
-#' qualifier symbols such as `<` and `>` are removed before numeric
-#' conversion.
-#'
-#' Missing optional fields are populated with `NA`.
-#'
-#' If a determinand mapping table is supplied, determinand codes are
-#' joined into the output and official Environment Agency determinand
-#' names are automatically applied where available.
+#' A tibble in WIMSicle observation format.
 #'
 #' @examples
-#' # Convert a data frame
+#' my_data <- data.frame(
+#'   site_id = c("SITE1", "SITE1"),
+#'   sample_date = c("2024-01-01", "2024-02-01"),
+#'   parameter = c("Nitrate", "Phosphate"),
+#'   value = c(2.3, 0.15)
+#' )
+#'
 #' wimsify(
 #'   data = my_data,
 #'   sampling_point = "site_id",
@@ -63,15 +45,11 @@
 #'   result = "value"
 #' )
 #'
-#' # Convert a CSV file
-#' wimsify(
-#'   data = "results.csv",
-#'   sample_date = "Date",
-#'   determinand = "Parameter",
-#'   result = "Result"
+#' my_mapping <- data.frame(
+#'   source_name = c("Nitrate", "Phosphate"),
+#'   determinand_code = c("0117", "0061")
 #' )
 #'
-#' # Apply determinand mapping
 #' wimsify(
 #'   data = my_data,
 #'   sample_date = "sample_date",
@@ -95,6 +73,21 @@ wimsify <- function(
     determinand_map = NULL
 ) {
 
+  # Read csv if filepath supplied
+  if (
+    is.character(data) &&
+    length(data) == 1 &&
+    file.exists(data)
+  ) {
+
+    data <- utils::read.csv(
+      data,
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+
+  }
+
   required <- c(
     sample_date,
     determinand,
@@ -115,129 +108,108 @@ wimsify <- function(
 
   }
 
-  # Read csv if filepath supplied
-  if (
-    is.character(data) &&
-    length(data) == 1 &&
-    file.exists(data)
-  ) {
-
-    data <- utils::read.csv(
-      data,
-      stringsAsFactors = FALSE,
-      check.names = FALSE
-    )
-
+  sampling_point_col <- if (is.null(sampling_point)) {
+    rep(NA_character_, nrow(data))
+  } else {
+    data[[sampling_point]]
   }
 
-  # Create WIMSicle format
-  out <- tibble::tibble(
+  site_name_col <- if (is.null(site_name)) {
+    rep(NA_character_, nrow(data))
+  } else {
+    data[[site_name]]
+  }
 
-    sampling_point =
-      if (!is.null(sampling_point))
-        data[[sampling_point]]
-    else
-      NA_character_,
+  unit_col <- if (is.null(unit)) {
+    rep(NA_character_, nrow(data))
+  } else {
+    data[[unit]]
+  }
 
-    site_name =
-      if (!is.null(site_name))
-        data[[site_name]]
-    else
-      NA_character_,
-
-    sample_date =
-      as.POSIXct(
-        data[[sample_date]],
-        tz = "UTC"
-      ),
-
-    determinand_code =
-      NA_character_,
-
-    determinand =
-      data[[determinand]],
-
-    original_determinand =
-      data[[determinand]],
-
-    result_raw =
-      as.character(
-        data[[result]]
-      ),
-
-    result =
-      suppressWarnings(
-        as.numeric(
-          gsub(
-            "[<>]",
-            "",
-            data[[result]]
-          )
-        )
-      ),
-
-    unit =
-      if (!is.null(unit))
-        data[[unit]]
-    else
-      NA_character_,
-
-    sample_material =
-      NA_character_,
-
-    sampling_purpose =
-      NA_character_
-
+  sample_date_col <- as.POSIXct(
+    data[[sample_date]],
+    tz = "UTC"
   )
 
-  # Apply determinand mapping
-  if (!is.null(determinand_map)) {
+  determinand_col <- data[[determinand]]
 
-    out <- out |>
-      dplyr::left_join(
-        determinand_map,
-        by = c(
-          "determinand" = "source_name"
+  result_col <- data[[result]]
+
+  out <- tibble::tibble(
+    sampling_point = sampling_point_col,
+    site_name = site_name_col,
+    sample_date = sample_date_col,
+    determinand_code = rep(
+      NA_character_,
+      nrow(data)
+    ),
+    determinand = determinand_col,
+    original_determinand = determinand_col,
+    result_raw = as.character(result_col),
+    result = suppressWarnings(
+      as.numeric(
+        gsub(
+          "[<>]",
+          "",
+          result_col
         )
       )
+    ),
+    unit = unit_col,
+    sample_material = rep(
+      NA_character_,
+      nrow(data)
+    ),
+    sampling_purpose = rep(
+      NA_character_,
+      nrow(data)
+    )
+  )
+
+  if (!is.null(determinand_map)) {
+
+    out <- dplyr::left_join(
+      out,
+      determinand_map,
+      by = c(
+        "determinand" = "source_name"
+      )
+    )
 
     out$determinand_code <- dplyr::coalesce(
       out$determinand_code.y,
       out$determinand_code.x
     )
 
-    out <- out |>
-      dplyr::select(
-        -determinand_code.x,
-        -determinand_code.y
-      )
+    out <- dplyr::select(
+      out,
+      -determinand_code.x,
+      -determinand_code.y
+    )
 
   }
 
-  # Lookup official WIMS names
   if (
     "determinand_code" %in% names(out) &&
     any(!is.na(out$determinand_code))
   ) {
 
-    det_lookup <- determinand_lookup
-
-    out <- out |>
-      dplyr::left_join(
-        det_lookup,
-        by = "determinand_code",
-        suffix = c("", "_wims")
-      )
+    out <- dplyr::left_join(
+      out,
+      determinand_lookup,
+      by = "determinand_code",
+      suffix = c("", "_wims")
+    )
 
     out$determinand <- dplyr::coalesce(
       out$determinand_wims,
       out$determinand
     )
 
-    out <- out |>
-      dplyr::select(
-        -determinand_wims
-      )
+    out <- dplyr::select(
+      out,
+      -determinand_wims
+    )
 
   }
 

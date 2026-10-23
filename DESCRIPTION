@@ -10,11 +10,10 @@ Authors@R:
     )
 Description: Tools for downloading, exploring, and visualising
     Environment Agency water quality data using the Water Quality API.
-License: Proprietary
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
-    jsonlite,
     dplyr,
     ggplot2,
     httr2,

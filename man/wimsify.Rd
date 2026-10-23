@@ -39,20 +39,7 @@ identifiers.}
 }}
 }
 \value{
-A tibble in WIMSicle observation format containing:
-\describe{
-\item{sampling_point}{Sampling point identifier.}
-\item{site_name}{Sampling point name.}
-\item{sample_date}{Sample date and time (UTC).}
-\item{determinand_code}{Environment Agency determinand code.}
-\item{determinand}{Standardised determinand name.}
-\item{original_determinand}{Original source determinand name.}
-\item{result_raw}{Original result value.}
-\item{result}{Numeric result value where possible.}
-\item{unit}{Measurement unit.}
-\item{sample_material}{Sample material type.}
-\item{sampling_purpose}{Sampling purpose description.}
-}
+A tibble in WIMSicle observation format.
 }
 \description{
 Converts a data frame or CSV file into the standard WIMSicle
@@ -66,19 +53,15 @@ names to Environment Agency determinand codes.
 When determinand codes are available, official Environment Agency
 determinand names are automatically applied using the package
 determinand lookup table.
-
-Result values are converted to numeric where possible. Common
-qualifier symbols such as \code{<} and \code{>} are removed before numeric
-conversion.
-
-Missing optional fields are populated with \code{NA}.
-
-If a determinand mapping table is supplied, determinand codes are
-joined into the output and official Environment Agency determinand
-names are automatically applied where available.
 }
 \examples{
-# Convert a data frame
+my_data <- data.frame(
+  site_id = c("SITE1", "SITE1"),
+  sample_date = c("2024-01-01", "2024-02-01"),
+  parameter = c("Nitrate", "Phosphate"),
+  value = c(2.3, 0.15)
+)
+
 wimsify(
   data = my_data,
   sampling_point = "site_id",
@@ -87,15 +70,11 @@ wimsify(
   result = "value"
 )
 
-# Convert a CSV file
-wimsify(
-  data = "results.csv",
-  sample_date = "Date",
-  determinand = "Parameter",
-  result = "Result"
+my_mapping <- data.frame(
+  source_name = c("Nitrate", "Phosphate"),
+  determinand_code = c("0117", "0061")
 )
 
-# Apply determinand mapping
 wimsify(
   data = my_data,
   sample_date = "sample_date",

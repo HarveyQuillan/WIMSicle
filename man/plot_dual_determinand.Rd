@@ -85,25 +85,23 @@ influence of extreme outliers.
 data <- get_site(
   sample_point_id = "TH-PCNR0051",
   from = "2010-01-01",
-  to = "2015-01-01",
+  to = "2012-01-01",
   determinands = c(
-    "Nitrate",
-    "Chlorophyll"
+    "Nitrate as N",
+    "Chlorophyll : Acetone Extract"
   )
 )
 
 plot_dual_determinand(
   data,
-  determinand_1 = "Nitrate",
-  determinand_2 = "Chlorophyll"
+  determinand_1 = "Nitrate as N",
+  determinand_2 = "Chlorophyll : Acetone Extract"
 )
 
 plot_dual_determinand(
   data,
-  determinand_1 = "Nitrate",
-  determinand_2 = "Chlorophyll",
-  colour_1 = "blue",
-  colour_2 = "darkgreen",
+  determinand_1 = "Nitrate as N",
+  determinand_2 = "Chlorophyll : Acetone Extract",
   scale_quantile = 0.9
 )
 
