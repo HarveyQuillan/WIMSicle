@@ -11,7 +11,7 @@ WIMSicle provides tools for downloading, exploring and visualising Environment A
 - Retrieve and filter sampling point metadata
 - Discover available determinands
 - Find determinands available at a site
-- Convert external datasets into WIMS-compatible format
+- Convert datasets into WIMS format
 - Create dual-axis time-series plots
 - Return tidy tibbles ready for analysis
 
